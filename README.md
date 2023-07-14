@@ -16,6 +16,7 @@ Coding Test for Spring Financial by Ajay Ramasubramanian for Full Stack Develope
 
 ## Backend Implementation:
 - The backend is implemented using the Laravel framework.
+- Make sure you have MySQL and Apache. Install XAMPP and run MySQL and Apache.
 - The table is created in schema 'spring_ajay' and the table name is players.
 - The "Players" model represents the players table in the database and defines the fillable fields.
 - The fields used were Name, Age, Points and Address.
@@ -30,6 +31,54 @@ Coding Test for Spring Financial by Ajay Ramasubramanian for Full Stack Develope
   - The "store" method receives a request with player data and creates a new player in the database.
   - The "update" method receives a request with player data and updates the corresponding player in the database.
   - The "destroy" method deletes a player from the database.
+ 
+## Docker
+- I also did using Docker containers.
+- The Vue and Laravel containers worked correctly.
+- I was not able verify MySQL container as I reached limit for number of images I can build.
+- ### Frontend Docker :-
+  - Build Stage:
+    - FROM node:lts-alpine as build-stage: Specifies the base image for the build stage, which is an Alpine-based Node.js image.
+    - WORKDIR /app: Sets the working directory inside the container to /app.
+    - COPY package*.json ./: Copies the package.json and package-lock.json files from the host into the container's working directory.
+    - RUN npm install: Runs the npm install command to install the dependencies specified in the package.json file.
+    - COPY . .: Copies all the files and folders from the host into the container's working directory.
+    - RUN npm run build: Executes the npm run build command, which typically builds the Vue.js or frontend application and generates the production-ready assets.
+      
+  -Production Stage:
+    - FROM nginx:stable-alpine as production-stage: Specifies the base image for the production stage, which is an Alpine-based Nginx image.
+    - COPY --from=build-stage /app/dist /usr/share/nginx/html: Copies the built assets from the build stage container (/app/dist) into the Nginx container's default web root directory (/usr/share/nginx/html), where the static files are served.
+    - EXPOSE 80: Informs Docker that the container listens on port 80 and makes it available for communication with other containers or the host.
+    - CMD ["nginx", "-g", "daemon off;"]: Defines the command to run when the container starts. In this case, it starts the Nginx web server in the foreground and keeps the container running with the daemon off; configuration.
+  
+  Overall, this Dockerfile is used to create a container image for a Vue.js or frontend application. The build stage installs the necessary dependencies, builds the application, and generates the production-ready assets. The production stage uses Nginx as the web server and copies the built assets into the appropriate location, making them available for serving to clients.
+
+- ### Backend Docker :-
+  - Base Image and Working Directory:
+    - `FROM php:8.1-cli`: Sets the official PHP 8.1 image as the base image for the container.
+    - `WORKDIR /var/www/html`: Sets the working directory inside the container to `/var/www/html`, where the application files will be placed.
+
+  - System Dependencies:
+    - `RUN apt-get update && apt-get install -y`: Updates the package repository and installs system dependencies.
+    - `libonig-dev`: Installs the Oniguruma regular expression library.
+    - `libzip-dev`: Installs the libzip library for working with ZIP archives.
+    - `unzip`: Installs the Unzip utility for extracting ZIP archives.
+    - `docker-php-ext-install pdo_mysql mbstring zip`: Installs PHP extensions required for Laravel, such as pdo_mysql, mbstring, and zip.
+
+  - Copy Application Files:
+    - `COPY . /var/www/html`: Copies all the files and folders from the host into the container's working directory (`/var/www/html`).
+
+  - Composer Installation and Dependency Installation:
+    - `RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer`: Downloads and installs Composer globally in the container.
+    - `RUN composer install --optimize-autoloader --no-dev`: Runs `composer install` to install project dependencies specified in `composer.json`. The `--optimize-autoloader` flag optimizes the autoloader for better performance, and the `--no-dev` flag skips installing development dependencies.
+
+  - Expose Port:
+    - `EXPOSE 9000`: Informs Docker that the container listens on port 9000 and makes it available for communication with other containers or the host.
+
+  - Migration and Laravel Development Server:
+    - `CMD php artisan migrate --force && php artisan serve --host=0.0.0.0 --port=9000`: Specifies the command to run when the container starts. It runs Laravel database migrations using `php artisan migrate --force` and then starts the Laravel development server using `php artisan serve` on the specified host and port.
+
+  This Dockerfile is specifically tailored for a Laravel application. It sets up the necessary PHP version, installs system dependencies, copies the application files, installs Composer, installs project dependencies, exposes the desired port, and runs database migrations and the Laravel development server within the container.    
 
 ###   PHP ARTISAN commands that were used:-
 The following commands were used during the backend implementation to create the necessary files, set up the database, define the API endpoints, and handle the validation of player data.
@@ -53,8 +102,6 @@ The following commands were used during the backend implementation to create the
 - Clone this repository and navigate to the project directory.
 ### In backend/
 - Make sure you have Node.js and Composer installed on your system.
-- Install the frontend dependencies by running the following command:
-    npm install
 - Install the backend dependencies by running the following command:
     composer install
 - Create a copy of the .env.example file and rename it to .env.
@@ -67,9 +114,17 @@ The following commands were used during the backend implementation to create the
 - Start the Laravel development server by running the following command:
     php artisan serve
 ### In vue-frontend/
+- Install the frontend dependencies by running the following command:
+    npm install
 - In a separate terminal, start the frontend development server by running the following command:
     npm run serve
 - Open your web browser and access the application at the provided URL (e.g., http://localhost:8080).
+
+### To run the application using Docker:-
+  - No need to follow above mentioned steps.
+  - Run the following two commands in top folder:
+      docker-compose build --no-cache
+      docker-compose up -d --force-recreate 
 
 ## Unit Test Cases for both frontend and backend
 
@@ -104,7 +159,7 @@ The provided test cases demonstrate how to write feature tests for the Laravel b
   - The test sends a DELETE request to the /api/players/{id} endpoint, where {id} is the ID of the created player.
   - The test asserts that the response status is 200 (OK) and that the JSON response contains the message "Player deleted".
 
-### For frontend
+### For Frontend
 
 The provided test cases demonstrate how to write unit tests for the frontend components using Vue Test Utils and the `vitest` testing library. Here's a breakdown of the test cases for both the HomeView and RegistrationForm components:
 
