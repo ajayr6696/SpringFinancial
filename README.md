@@ -1,5 +1,4 @@
-# SpringFinancial
-Coding Test for Spring Financial by Ajay Ramasubramanian for Full Stack Developer position
+# Vue-Laravel-Mysql PlayerBoard
 
 ## Frontend Implementation:
 - The frontend code is implemented using the Vue.js framework.
